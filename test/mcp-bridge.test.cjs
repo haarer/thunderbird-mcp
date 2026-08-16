@@ -10,6 +10,7 @@ const {
   compactToolResultJsonText,
   clearConnectionCache,
   discoverConnectionInfo,
+  getThunderbirdHosts,
   isValidAuthToken,
   readConnectionInfo,
 } = require('../mcp-bridge.cjs');
@@ -100,6 +101,46 @@ describe('Auth token validation', () => {
     assert.equal(isValidAuthToken('g'.repeat(64)), false);
     assert.equal(isValidAuthToken(`${'a'.repeat(64)}\n`), false);
     assert.equal(isValidAuthToken(null), false);
+  });
+});
+
+describe('Thunderbird host selection', () => {
+  const previousHost = process.env.THUNDERBIRD_MCP_HOST;
+
+  afterEach(() => {
+    if (previousHost === undefined) {
+      delete process.env.THUNDERBIRD_MCP_HOST;
+    } else {
+      process.env.THUNDERBIRD_MCP_HOST = previousHost;
+    }
+  });
+
+  it('defaults to localhost', () => {
+    delete process.env.THUNDERBIRD_MCP_HOST;
+    assert.deepEqual(getThunderbirdHosts(), ['127.0.0.1']);
+    assert.deepEqual(getThunderbirdHosts({ port: 8765, token: 'a'.repeat(64) }), ['127.0.0.1']);
+  });
+
+  it('uses the host field from connection.json', () => {
+    delete process.env.THUNDERBIRD_MCP_HOST;
+    assert.deepEqual(
+      getThunderbirdHosts({ port: 8765, token: 'a'.repeat(64), host: 'host.containers.internal' }),
+      ['host.containers.internal']
+    );
+  });
+
+  it('ignores a blank host field', () => {
+    delete process.env.THUNDERBIRD_MCP_HOST;
+    assert.deepEqual(getThunderbirdHosts({ port: 8765, token: 'a'.repeat(64), host: '   ' }), ['127.0.0.1']);
+    assert.deepEqual(getThunderbirdHosts({ port: 8765, token: 'a'.repeat(64), host: 123 }), ['127.0.0.1']);
+  });
+
+  it('lets THUNDERBIRD_MCP_HOST override the connection.json host', () => {
+    process.env.THUNDERBIRD_MCP_HOST = '10.0.0.5, 10.0.0.6';
+    assert.deepEqual(
+      getThunderbirdHosts({ port: 8765, token: 'a'.repeat(64), host: 'host.containers.internal' }),
+      ['10.0.0.5', '10.0.0.6']
+    );
   });
 });
 

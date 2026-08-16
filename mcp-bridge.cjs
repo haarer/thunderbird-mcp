@@ -3,7 +3,9 @@
  * MCP Bridge for Thunderbird
  *
  * Converts stdio MCP protocol to HTTP requests for the Thunderbird MCP extension.
- * The extension exposes an HTTP endpoint on localhost:8765.
+ * The extension exposes an HTTP endpoint on localhost:8765. When the bridge runs
+ * in a container and Thunderbird is on the host, set THUNDERBIRD_MCP_HOST
+ * (e.g. host.containers.internal) to reach it.
  */
 
 const http = require('http');
@@ -12,6 +14,21 @@ const path = require('path');
 const os = require('os');
 
 const THUNDERBIRD_HOSTS = ['127.0.0.1'];
+
+// Hosts to try for the Thunderbird HTTP server. Precedence: THUNDERBIRD_MCP_HOST
+// env var (comma-separated), else an optional `host` field in connection.json,
+// else the default localhost. The `host`/env override is what lets the bridge run
+// in a container while Thunderbird runs on the host (e.g. host.containers.internal).
+function getThunderbirdHosts(connInfo = {}) {
+  const raw = process.env.THUNDERBIRD_MCP_HOST;
+  if (raw && raw.trim()) {
+    return raw.split(',').map(h => h.trim()).filter(Boolean);
+  }
+  if (connInfo.host && typeof connInfo.host === 'string' && connInfo.host.trim()) {
+    return [connInfo.host.trim()];
+  }
+  return THUNDERBIRD_HOSTS;
+}
 const REQUEST_TIMEOUT = 30000;
 const CONNECTION_RETRY_DELAY_MS = 1000;
 const CONNECTION_MAX_RETRIES = 5;
@@ -771,9 +788,12 @@ async function forwardToThunderbird(message) {
     if (!isValidAuthToken(connInfo.token)) {
       throw new Error('Invalid connection file: token must be 64 lowercase hex characters');
     }
+    if (connInfo.host !== undefined && typeof connInfo.host !== 'string') {
+      throw new Error('Invalid connection file: host must be a string');
+    }
 
     try {
-      return await tryAllHosts(THUNDERBIRD_HOSTS, postData, connInfo.port, connInfo.token);
+      return await tryAllHosts(getThunderbirdHosts(connInfo), postData, connInfo.port, connInfo.token);
     } catch (err) {
       if (!isRetryableConnectionError(err)) {
         throw err;
@@ -909,6 +929,7 @@ module.exports = {
   findSnapConnectionCandidates,
   formatDiscoveryAttempts,
   compactToolResultJsonText,
+  getThunderbirdHosts,
   isValidAuthToken,
   readConnectionInfo,
   startBridge,

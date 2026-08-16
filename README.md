@@ -134,6 +134,28 @@ Example override:
 
 That's it. Your AI can now access Thunderbird.
 
+### `connection.json` format
+
+The extension writes the server's connection details to `connection.json` on every startup (in the temp directory for your platform, see above). The bridge discovers and parses this file to find the HTTP server. Format:
+
+```json
+{
+  "port": 8765,
+  "token": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "pid": 12345,
+  "host": "host.containers.internal"
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `port` | number | The actual HTTP port the server bound to (one of 8765-8774) |
+| `token` | string | Session-scoped bearer token (64 lowercase hex chars). Required for every HTTP request (`Authorization: Bearer <token>`) |
+| `pid` | number | Thunderbird's process ID. Informational only -- the bridge never reads it |
+| `host` | string | Optional. Host the bridge should connect to instead of `127.0.0.1`. Used when the bridge runs in a container and Thunderbird is on the host (`host.containers.internal` for Podman/Docker, `host.docker.internal` for Docker Desktop on macOS/Windows) |
+
+The bridge requires `port` and `token`; a file missing either is rejected with "missing port or token". The `host` field is optional -- the bridge falls back to `127.0.0.1` when absent. Host precedence: `THUNDERBIRD_MCP_HOST` env var (comma-separated list) > `connection.json` `host` field > `127.0.0.1`. A sample file is committed at `connection.json` in the repo root -- do not rename it over a real one (e.g. when setting `THUNDERBIRD_MCP_CONNECTION_FILE`) or the bridge will fail to authenticate. Note: the extension itself writes only `port`, `token`, and `pid`; add `host` to a copy of the file when you need the container-bridge scenario. Connecting from a container also requires enabling **Listen on all interfaces** in the extension settings (see Security), otherwise the server is bound to loopback on the host.
+
 ---
 
 ## Security
@@ -153,6 +175,7 @@ That's it. Your AI can now access Thunderbird.
 |---------|-----|
 | Extension not loading | Check Tools > Add-ons and Themes. Errors: Tools > Developer Tools > Error Console |
 | Connection refused | Make sure Thunderbird is running and the extension is enabled |
+| Bridge in a container, Thunderbird on the host | Add `"host": "host.containers.internal"` to the connection file the bridge reads, and enable **Listen on all interfaces** in the extension settings |
 | Bridge can't find `connection.json` | Set `THUNDERBIRD_MCP_CONNECTION_FILE` explicitly if your environment uses a non-standard temp/runtime path |
 | Missing recent emails | IMAP folders can be stale. Click the folder in Thunderbird to sync, or right-click > Properties > Repair Folder |
 | Tool not found after update | Reconnect MCP (`/mcp` in Claude Code) to pick up new tools |
