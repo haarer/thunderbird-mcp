@@ -84,7 +84,7 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           VER="${GITHUB_REF_NAME#v}"
           HASH="$(sha256sum "$XPI" | cut -d' ' -f1)"
-          ASSET_URL="https://github.com/TKasperczyk/thunderbird-mcp/releases/download/${TAG}/thunderbird-mcp-${TAG}.xpi"
+          ASSET_URL="https://github.com/haarer/thunderbird-mcp/releases/download/${TAG}/thunderbird-mcp-${TAG}.xpi"
           TMP_ASSET="$(mktemp)"
 
           cleanup() {
