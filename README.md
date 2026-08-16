@@ -1,26 +1,21 @@
 # Thunderbird MCP
 
-[![CI](https://github.com/TKasperczyk/thunderbird-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/TKasperczyk/thunderbird-mcp/actions/workflows/ci.yml)
-[![Tools](https://img.shields.io/badge/40_Tools-email%2C_compose%2C_filters%2C_calendar%2C_contacts-blue.svg)](#what-you-can-do)
+[![CI](https://github.com/haarer/thunderbird-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/haarer/thunderbird-mcp/actions/workflows/ci.yml)
+[![Tools](https://img.shields.io/badge/15_Tools-read_only-blue.svg)](#what-you-can-do)
 [![Localhost Only](https://img.shields.io/badge/Privacy-localhost_only-green.svg)](#security)
 [![Thunderbird](https://img.shields.io/badge/Thunderbird-102%2B-0a84ff.svg)](https://www.thunderbird.net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-grey.svg)](LICENSE)
 
-Give your AI assistant full access to Thunderbird -- search mail, compose messages, manage filters, and organize your inbox. All through the [Model Context Protocol](https://modelcontextprotocol.io/).
+Give your AI assistant read-only access to Thunderbird -- search mail, read messages, list calendars and contacts. All through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
-<p align="center">
-  <img src="docs/demo.gif" alt="Thunderbird MCP Demo" width="600">
-</p>
-
-> Inspired by [bb1/thunderbird-mcp](https://github.com/bb1/thunderbird-mcp). Rewritten from scratch with a bundled HTTP server, proper MIME decoding, and UTF-8 handling throughout.
+> forked from [TKasperczyk/thunderbird-mcp](https://github.com/TKasperczyk/thunderbird-mcp). Removed all tools that could change the state of Thunderbird. Only reading tools remain.
 
 ---
 
 ## Why?
 
-Thunderbird has no official API for AI tools. Your AI assistant can't read your email, can't help you draft replies, can't organize your inbox. This extension fixes that -- it exposes 40 tools over MCP so any compatible AI (Claude, GPT, local models) can work with your mail the way you'd expect.
+Thunderbird has no official API for AI tools. Your AI assistant can't read your email or manage your calendar. This extension fixes that -- it exposes 15 read-only tools over MCP so any compatible AI (OpenCode, Claude, GPT, local models) can read your mail the way you'd expect, without ever being able to modify it.
 
-Mail sends and event/task creation require review by default because **Block `skipReview`** starts enabled. `skipReview: true` is honored only after you explicitly disable that safety setting. **By default, nothing is sent or created without your review.**
 
 ---
 
@@ -49,39 +44,12 @@ The Thunderbird extension embeds a local HTTP server with session-scoped auth to
 | `getMessages` | Read full email content for up to the configured batch limit in one call (default 10, max 20). Uses the same `bodyFormat`, `rawSource`, and attachment options as `getMessage`; each item supplies `messageId` and `folderPath`. |
 | `getRecentMessages` | Get recent messages with date, unread, and tag filtering. Supports pagination. Results include `threadId` and `preview`. |
 | `displayMessage` | Open a message in Thunderbird's GUI -- `3pane` (default), `tab`, or `window` mode |
-| `updateMessage` | Mark read/unread, flag/unflag, add/remove tags, move between folders, or trash -- supports bulk via `messageIds` |
-| `deleteMessages` | Delete messages -- drafts are safely moved to Trash |
-| `createFolder` | Create new subfolders to organize your mail |
-| `renameFolder` | Rename an existing mail folder |
-| `deleteFolder` | Delete a folder (moves to Trash, or permanently deletes if already in Trash) |
-| `moveFolder` | Move a folder to a new parent within the same account |
-| `emptyTrash` | Permanently delete all messages in Trash (including subfolders) |
-| `emptyJunk` | Permanently delete all messages in Junk/Spam (including subfolders) |
-
-### Compose
-
-| Tool | Description |
-|------|-------------|
-| `sendMail` | Compose a new email -- opens a review window; direct sending requires explicitly disabling the `skipReview` safety block |
-| `replyToMessage` | Reply with quoted original and proper threading -- `skipReview` is subject to the same safety block |
-| `forwardMessage` | Forward with all original attachments preserved -- `skipReview` is subject to the same safety block |
-
-All compose tools open a window for you to review and edit before sending by default. The **Block `skipReview`** preference is on by default, so `skipReview: true` is rejected until you explicitly disable the preference; only then can it send directly. Attachments can be file paths or inline base64 objects.
-
-Compose tools validate the `from` identity strictly -- if the specified sender doesn't match any configured Thunderbird identity, the tool returns an error instead of silently substituting another account.
 
 ### Filters
 
 | Tool | Description |
 |------|-------------|
 | `listFilters` | List all filter rules with human-readable conditions and actions |
-| `createFilter` | Create filters with structured conditions (from, subject, date...) and actions (move, tag, flag...) |
-| `updateFilter` | Modify a filter's name, enabled state, conditions, or actions |
-| `deleteFilter` | Remove a filter by index |
-| `reorderFilters` | Change filter execution priority |
-| `applyFilters` | Run filters on a folder on demand -- let your AI organize your inbox |
-
-Full control over Thunderbird's message filters. Changes persist immediately. Your AI can create sorting rules, adjust priorities, and run them on existing mail.
 
 ### Contacts
 
@@ -89,22 +57,15 @@ Full control over Thunderbird's message filters. Changes persist immediately. Yo
 |------|-------------|
 | `searchContacts` | Search contacts across all address books by email or name and return full contact details. Supports `maxResults`. |
 | `getContact` | Read full contact details by UID |
-| `createContact` | Create a contact with optional email/name, phones, postal addresses, organization, title, note, and birthday. Phone-only contacts are supported. |
-| `updateContact` | Update contact fields; omitted fields stay unchanged, while empty phone/address arrays clear those collections |
-| `deleteContact` | Delete a contact by UID |
 
 ### Calendar
 
 | Tool | Description |
 |------|-------------|
 | `listCalendars` | List all calendars with read-only, event, and task support flags |
-| `createEvent` | Create a calendar event -- opens a review dialog; direct creation via `skipReview` requires explicitly disabling the default safety block. Accepts `status: tentative \| confirmed \| cancelled` (VEVENT STATUS per iCal RFC 5545). |
 | `listEvents` | Query events by date range with recurring event expansion. Returns `status` on each event. |
-| `updateEvent` | Modify an event's title, dates, location, description, or `status` |
-| `deleteEvent` | Delete a calendar event by ID |
-| `createTask` | Open a pre-filled task dialog for review; direct creation via `skipReview` requires explicitly disabling the default safety block |
+| `listCategories` | List all calendar categories |
 | `listTasks` | List tasks/to-dos from calendars -- filter by completion status, due date, or calendar |
-| `updateTask` | Update a task's title, due date, description, priority, completion status, or percent complete |
 
 ### Access Control
 
@@ -114,8 +75,6 @@ Full control over Thunderbird's message filters. Changes persist immediately. Yo
 
 Account and tool access are configured via the extension settings page (Tools > Add-ons > Thunderbird MCP > Options). Access control is not MCP-exposed -- only the user can change it.
 
-The same settings page has a "Send Safety" section. **Block `skipReview`** is enabled by default and rejects `skipReview: true` for `sendMail`, `replyToMessage`, `forwardMessage`, `createEvent`, and `createTask`; their review window or dialog still opens normally. `skipReview` is honored only after you explicitly disable this preference.
-
 ---
 
 ## Setup
@@ -123,7 +82,7 @@ The same settings page has a "Send Safety" section. **Block `skipReview`** is en
 ### 1. Install the extension
 
 ```bash
-git clone https://github.com/TKasperczyk/thunderbird-mcp.git
+git clone https://github.com/haarer/thunderbird-mcp.git
 ```
 
 Install `dist/thunderbird-mcp.xpi` in Thunderbird (Tools > Add-ons > Install from File), then restart. A pre-built XPI is included in the repo -- no build step needed.
@@ -184,7 +143,7 @@ That's it. Your AI can now access Thunderbird.
 - **Account access control**: Restrict which email accounts are visible to MCP clients via the settings page. Changes take effect immediately.
 - **Tool access control**: Disable specific tools via the settings page. Disabled tools are hidden from `tools/list` and blocked at dispatch.
 - **Localhost only**: By default, the server binds to localhost only. The "Listen on all interfaces" option in settings binds to all IPv4 interfaces for WSL, Docker, or remote access. **This exposes the MCP server to every device on your local network.** Only enable on trusted networks. Auth token is always required.
-- **Auto-update integrity**: Auto-update is a code-delivery channel whose integrity depends on continued control of the GitHub repository, the GitHub Actions token, and the `tomaszkasperczyk.name` registration.
+- **Auto-update integrity**: Auto-update is a code-delivery channel whose integrity depends on continued control of the GitHub repository and the GitHub Actions token.
 
 ---
 
@@ -240,7 +199,7 @@ thunderbird-mcp/
 │   ├── options.js              # Settings page logic
 │   ├── icons/                  # Extension icons
 │   └── mcp_server/
-│       ├── api.js              # All 40 MCP tools + auth + access control
+│       ├── api.js              # All 15 read-only MCP tools + auth + access control
 │       └── schema.json
 ├── test/                       # Test suite (node:test, zero dependencies)
 └── scripts/
@@ -252,9 +211,6 @@ thunderbird-mcp/
 
 - IMAP folder databases can be stale until you click on them in Thunderbird
 - HTML-only emails are converted to plain text (original formatting is lost)
-- Recurring calendar event CRUD operates on the series, not individual occurrences
-- IMAP folder operations (rename, delete, move) are async -- verify with `listFolders` after
-- Combining tags with move/trash on IMAP may not preserve tags on the moved copy -- use separate calls
 - Pre-existing Thunderbird filters with cross-account move/copy targets are not restricted by account access control
 - `searchBody` on IMAP without offline sync only searches headers (Gloda limitation)
 - `rawSource` requires offline message copy for IMAP -- online-only messages will error

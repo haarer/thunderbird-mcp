@@ -1,19 +1,19 @@
 {
   "name": "thunderbird-mcp",
   "version": "0.7.4",
-  "description": "MCP server for Thunderbird - enables AI assistants to access email, contacts, and calendars",
-  "author": "Tomasz Kasperczyk",
+  "description": "Read Only MCP server for Thunderbird - enables AI assistants to access email, contacts, and calendars",
+  "author": "Alexander Haarer",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/TKasperczyk/thunderbird-mcp"
+    "url": "https://github.com/haarer/thunderbird-mcp"
   },
   "keywords": [
     "mcp",
     "thunderbird",
     "email",
     "ai",
-    "claude"
+    "opencode"
   ],
   "bin": {
     "thunderbird-mcp": "./mcp-bridge.cjs"

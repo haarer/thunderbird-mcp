@@ -79,38 +79,13 @@ const ALL_TOOLS = [
   { name: "getMessages", group: "messages", crud: "read" },
   { name: "getRecentMessages", group: "messages", crud: "read" },
   { name: "displayMessage", group: "messages", crud: "read" },
-  { name: "sendMail", group: "messages", crud: "create" },
-  { name: "replyToMessage", group: "messages", crud: "create" },
-  { name: "forwardMessage", group: "messages", crud: "create" },
-  { name: "updateMessage", group: "messages", crud: "update" },
-  { name: "deleteMessages", group: "messages", crud: "delete" },
-  { name: "saveDraft", group: "messages", crud: "create" },
-  { name: "createFolder", group: "folders", crud: "create" },
-  { name: "renameFolder", group: "folders", crud: "update" },
-  { name: "moveFolder", group: "folders", crud: "update" },
-  { name: "deleteFolder", group: "folders", crud: "delete" },
-  { name: "emptyTrash", group: "folders", crud: "delete" },
-  { name: "emptyJunk", group: "folders", crud: "delete" },
   { name: "searchContacts", group: "contacts", crud: "read" },
   { name: "getContact", group: "contacts", crud: "read" },
-  { name: "createContact", group: "contacts", crud: "create" },
-  { name: "updateContact", group: "contacts", crud: "update" },
-  { name: "deleteContact", group: "contacts", crud: "delete" },
   { name: "listCalendars", group: "calendar", crud: "read" },
   { name: "listEvents", group: "calendar", crud: "read" },
   { name: "listCategories", group: "calendar", crud: "read" },
-  { name: "createEvent", group: "calendar", crud: "create" },
-  { name: "createTask", group: "calendar", crud: "create" },
   { name: "listTasks", group: "calendar", crud: "read" },
-  { name: "updateTask", group: "calendar", crud: "update" },
-  { name: "updateEvent", group: "calendar", crud: "update" },
-  { name: "deleteEvent", group: "calendar", crud: "delete" },
   { name: "listFilters", group: "filters", crud: "read" },
-  { name: "createFilter", group: "filters", crud: "create" },
-  { name: "updateFilter", group: "filters", crud: "update" },
-  { name: "reorderFilters", group: "filters", crud: "update" },
-  { name: "applyFilters", group: "filters", crud: "update" },
-  { name: "deleteFilter", group: "filters", crud: "delete" },
 ];
 
 // ── Tests ─────────────────────────────────────────────────────────────
@@ -123,13 +98,13 @@ describe("Tool access: getDisabledTools", () => {
   });
 
   it("valid JSON array returns tool names", () => {
-    const pref = JSON.stringify(["sendMail", "deleteMessages"]);
-    assert.deepStrictEqual(getDisabledTools(pref), ["sendMail", "deleteMessages"]);
+    const pref = JSON.stringify(["getRecentMessages", "displayMessage"]);
+    assert.deepStrictEqual(getDisabledTools(pref), ["getRecentMessages", "displayMessage"]);
   });
 
   it("FAIL-CLOSED: non-array JSON returns __all__ sentinel", () => {
-    assert.deepStrictEqual(getDisabledTools('{"sendMail": true}'), ["__all__"]);
-    assert.deepStrictEqual(getDisabledTools('"sendMail"'), ["__all__"]);
+    assert.deepStrictEqual(getDisabledTools('{"getRecentMessages": true}'), ["__all__"]);
+    assert.deepStrictEqual(getDisabledTools('"getRecentMessages"'), ["__all__"]);
     assert.deepStrictEqual(getDisabledTools("42"), ["__all__"]);
     assert.deepStrictEqual(getDisabledTools("true"), ["__all__"]);
   });
@@ -147,30 +122,30 @@ describe("Tool access: getDisabledTools", () => {
 
 describe("Tool access: isToolEnabled", () => {
   it("all tools enabled when pref is empty", () => {
-    assert.ok(isToolEnabled("sendMail", ""));
-    assert.ok(isToolEnabled("deleteMessages", ""));
+    assert.ok(isToolEnabled("getRecentMessages", ""));
+    assert.ok(isToolEnabled("displayMessage", ""));
     assert.ok(isToolEnabled("searchContacts", ""));
   });
 
   it("disabled tool returns false", () => {
-    const pref = JSON.stringify(["sendMail", "deleteMessages"]);
-    assert.ok(!isToolEnabled("sendMail", pref));
-    assert.ok(!isToolEnabled("deleteMessages", pref));
+    const pref = JSON.stringify(["getRecentMessages", "displayMessage"]);
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
+    assert.ok(!isToolEnabled("displayMessage", pref));
   });
 
   it("non-disabled tool returns true", () => {
-    const pref = JSON.stringify(["sendMail"]);
+    const pref = JSON.stringify(["getRecentMessages"]);
     assert.ok(isToolEnabled("searchMessages", pref));
     assert.ok(isToolEnabled("getMessage", pref));
   });
 
   it("undisableable tools ALWAYS return true even when in disabled list", () => {
-    const pref = JSON.stringify(["listAccounts", "listFolders", "getAccountAccess", "sendMail"]);
+    const pref = JSON.stringify(["listAccounts", "listFolders", "getAccountAccess", "getRecentMessages"]);
     assert.ok(isToolEnabled("listAccounts", pref));
     assert.ok(isToolEnabled("listFolders", pref));
     assert.ok(isToolEnabled("getAccountAccess", pref));
-    // But sendMail IS disabled
-    assert.ok(!isToolEnabled("sendMail", pref));
+    // But getRecentMessages IS disabled
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
   });
 
   it("undisableable tools survive __all__ sentinel (corrupt pref)", () => {
@@ -179,8 +154,8 @@ describe("Tool access: isToolEnabled", () => {
     assert.ok(isToolEnabled("listFolders", pref));
     assert.ok(isToolEnabled("getAccountAccess", pref));
     // Regular tools are blocked
-    assert.ok(!isToolEnabled("sendMail", pref));
-    assert.ok(!isToolEnabled("deleteMessages", pref));
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
+    assert.ok(!isToolEnabled("displayMessage", pref));
   });
 });
 
@@ -191,11 +166,11 @@ describe("Tool access: tools/list filtering", () => {
   });
 
   it("hides disabled tools from the list", () => {
-    const pref = JSON.stringify(["sendMail", "deleteMessages"]);
+    const pref = JSON.stringify(["getRecentMessages", "displayMessage"]);
     const result = filterTools(ALL_TOOLS, pref);
     const names = result.map(t => t.name);
-    assert.ok(!names.includes("sendMail"));
-    assert.ok(!names.includes("deleteMessages"));
+    assert.ok(!names.includes("getRecentMessages"));
+    assert.ok(!names.includes("displayMessage"));
     assert.ok(names.includes("searchMessages"));
     assert.ok(names.includes("getMessage"));
     assert.equal(result.length, ALL_TOOLS.length - 2);
@@ -227,10 +202,10 @@ describe("Tool access: callTool guard (defense in depth)", () => {
   });
 
   it("rejects disabled tools with clear error", () => {
-    const pref = JSON.stringify(["sendMail"]);
+    const pref = JSON.stringify(["getRecentMessages"]);
     assert.throws(
-      () => callToolGuard("sendMail", pref),
-      { message: "Tool is disabled: sendMail" }
+      () => callToolGuard("getRecentMessages", pref),
+      { message: "Tool is disabled: getRecentMessages" }
     );
   });
 
@@ -242,12 +217,12 @@ describe("Tool access: callTool guard (defense in depth)", () => {
 
   it("rejects all regular tools on corrupt pref (fail-closed)", () => {
     assert.throws(
-      () => callToolGuard("sendMail", "{not an array}"),
-      { message: "Tool is disabled: sendMail" }
+      () => callToolGuard("getRecentMessages", "{not an array}"),
+      { message: "Tool is disabled: getRecentMessages" }
     );
     assert.throws(
-      () => callToolGuard("deleteMessages", "{not an array}"),
-      { message: "Tool is disabled: deleteMessages" }
+      () => callToolGuard("displayMessage", "{not an array}"),
+      { message: "Tool is disabled: displayMessage" }
     );
   });
 
@@ -267,8 +242,8 @@ describe("Tool access: adversarial inputs", () => {
   });
 
   it("disabled list with __proto__ and constructor entries", () => {
-    const pref = JSON.stringify(["__proto__", "constructor", "toString", "sendMail"]);
-    assert.ok(!isToolEnabled("sendMail", pref));
+    const pref = JSON.stringify(["__proto__", "constructor", "toString", "getRecentMessages"]);
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
     assert.ok(!isToolEnabled("__proto__", pref));
     assert.ok(!isToolEnabled("constructor", pref));
     // Undisableable tools still work
@@ -280,13 +255,13 @@ describe("Tool access: adversarial inputs", () => {
     // Empty string tool is disabled
     assert.ok(!isToolEnabled("", pref));
     // Real tools still work
-    assert.ok(isToolEnabled("sendMail", pref));
+    assert.ok(isToolEnabled("getRecentMessages", pref));
   });
 
   it("disabled list with duplicate entries", () => {
-    const pref = JSON.stringify(["sendMail", "sendMail", "sendMail"]);
-    assert.ok(!isToolEnabled("sendMail", pref));
-    assert.ok(isToolEnabled("deleteMessages", pref));
+    const pref = JSON.stringify(["getRecentMessages", "getRecentMessages", "getRecentMessages"]);
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
+    assert.ok(isToolEnabled("displayMessage", pref));
   });
 
   it("disabled list with non-existent tool names", () => {
@@ -294,39 +269,39 @@ describe("Tool access: adversarial inputs", () => {
     // These fake tools are disabled (defense in depth)
     assert.ok(!isToolEnabled("fakeToolThatDoesNotExist", pref));
     // Real tools unaffected
-    assert.ok(isToolEnabled("sendMail", pref));
-    assert.ok(isToolEnabled("deleteMessages", pref));
+    assert.ok(isToolEnabled("getRecentMessages", pref));
+    assert.ok(isToolEnabled("displayMessage", pref));
   });
 
   it("case sensitivity: tool names are case-sensitive", () => {
     const pref = JSON.stringify(["SendMail", "SENDMAIL"]);
     // Only exact match is disabled
-    assert.ok(isToolEnabled("sendMail", pref));
+    assert.ok(isToolEnabled("getRecentMessages", pref));
     assert.ok(!isToolEnabled("SendMail", pref));
     assert.ok(!isToolEnabled("SENDMAIL", pref));
   });
 
   it("pref with nested arrays (not flat strings)", () => {
     // JSON.parse will succeed, Array.isArray will pass, but includes() works on elements
-    const pref = JSON.stringify([["sendMail"], "deleteMessages"]);
+    const pref = JSON.stringify([["getRecentMessages"], "displayMessage"]);
     // The nested array element won't match string comparison
-    assert.ok(isToolEnabled("sendMail", pref));
+    assert.ok(isToolEnabled("getRecentMessages", pref));
     // But the string entry does match
-    assert.ok(!isToolEnabled("deleteMessages", pref));
+    assert.ok(!isToolEnabled("displayMessage", pref));
   });
 
   it("pref with null and number entries", () => {
-    const pref = JSON.stringify([null, 42, "sendMail"]);
-    assert.ok(!isToolEnabled("sendMail", pref));
-    assert.ok(isToolEnabled("deleteMessages", pref));
+    const pref = JSON.stringify([null, 42, "getRecentMessages"]);
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
+    assert.ok(isToolEnabled("displayMessage", pref));
   });
 
   it("very large disabled list", () => {
     const bigList = Array.from({ length: 10000 }, (_, i) => `tool_${i}`);
-    bigList.push("sendMail");
+    bigList.push("getRecentMessages");
     const pref = JSON.stringify(bigList);
-    assert.ok(!isToolEnabled("sendMail", pref));
-    assert.ok(isToolEnabled("deleteMessages", pref));
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
+    assert.ok(isToolEnabled("displayMessage", pref));
   });
 
   it("tools/list with all tools disabled shows only undisableable", () => {
@@ -349,8 +324,8 @@ describe("Tool access: adversarial inputs", () => {
 
   it("__all__ sentinel in disabled list blocks all regular tools", () => {
     const pref = JSON.stringify(["__all__"]);
-    assert.ok(!isToolEnabled("sendMail", pref));
-    assert.ok(!isToolEnabled("deleteMessages", pref));
+    assert.ok(!isToolEnabled("getRecentMessages", pref));
+    assert.ok(!isToolEnabled("displayMessage", pref));
     assert.ok(!isToolEnabled("searchContacts", pref));
     // Undisableable tools survive
     assert.ok(isToolEnabled("listAccounts", pref));
@@ -359,7 +334,7 @@ describe("Tool access: adversarial inputs", () => {
   });
 
   it("__all__ sentinel mixed with other entries still blocks all", () => {
-    const pref = JSON.stringify(["sendMail", "__all__", "deleteMessages"]);
+    const pref = JSON.stringify(["getRecentMessages", "__all__", "displayMessage"]);
     assert.ok(!isToolEnabled("searchContacts", pref));
     assert.ok(!isToolEnabled("getMessage", pref));
   });
@@ -392,24 +367,24 @@ describe("Tool access: setToolAccess validation", () => {
   });
 
   it("accepts valid tool names", () => {
-    assert.deepStrictEqual(validateSetToolAccess(["sendMail", "deleteMessages"]), { success: true });
+    assert.deepStrictEqual(validateSetToolAccess(["getRecentMessages", "displayMessage"]), { success: true });
   });
 
   it("rejects non-array input", () => {
-    assert.ok(validateSetToolAccess("sendMail").error);
+    assert.ok(validateSetToolAccess("getRecentMessages").error);
     assert.ok(validateSetToolAccess(42).error);
     assert.ok(validateSetToolAccess(null).error);
   });
 
   it("rejects undisableable tools", () => {
-    const result = validateSetToolAccess(["listAccounts", "sendMail"]);
+    const result = validateSetToolAccess(["listAccounts", "getRecentMessages"]);
     assert.ok(result.error);
     assert.match(result.error, /cannot disable/i);
     assert.match(result.error, /listAccounts/);
   });
 
   it("rejects non-string entries", () => {
-    const result = validateSetToolAccess([42, "sendMail"]);
+    const result = validateSetToolAccess([42, "getRecentMessages"]);
     assert.ok(result.error);
     assert.match(result.error, /strings/i);
   });
@@ -421,7 +396,7 @@ describe("Tool access: setToolAccess validation", () => {
   });
 
   it("SECURITY: rejects __all__ even mixed with valid tools", () => {
-    const result = validateSetToolAccess(["sendMail", "__all__", "deleteMessages"]);
+    const result = validateSetToolAccess(["getRecentMessages", "__all__", "displayMessage"]);
     assert.ok(result.error);
     assert.match(result.error, /__all__/);
   });
@@ -546,7 +521,8 @@ describe("Tool metadata: getToolAccessConfig sorting", () => {
   });
 
   it("group order is: system, messages, folders, contacts, calendar, filters", () => {
-    const sorted = sortTools(ALL_TOOLS);
+    const withAllGroups = [...ALL_TOOLS, { name: "exampleFolder", group: "folders", crud: "read" }];
+    const sorted = sortTools(withAllGroups);
     const seenGroups = [];
     for (const t of sorted) {
       if (!seenGroups.includes(t.group)) seenGroups.push(t.group);

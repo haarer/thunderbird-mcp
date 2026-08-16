@@ -5,7 +5,7 @@ const path = require('path');
 
 const PROJECT_DIR = path.resolve(__dirname, '..');
 const MANIFEST_FILE = path.join(PROJECT_DIR, 'extension', 'manifest.json');
-const ADDON_ID = 'thunderbird-mcp@tkasperczyk.dev';
+const ADDON_ID = 'thunderbird-ro-mcp@haarer.com';
 
 function fail(message) {
   console.error(`Error: ${message}`);
@@ -54,7 +54,7 @@ function main() {
   }
 
   const gecko = readGeckoSettings();
-  const updateLink = `https://github.com/TKasperczyk/thunderbird-mcp/releases/download/${tag}/thunderbird-mcp-${tag}.xpi`;
+  const updateLink = `https://github.com/haarer/thunderbird-mcp/releases/download/${tag}/thunderbird-mcp-${tag}.xpi`;
   const updateHash = `sha256:${hash}`;
 
   if (!/^sha256:[0-9a-f]{64}$/.test(updateHash)) {
