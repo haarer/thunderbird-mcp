@@ -104,6 +104,25 @@ Add to your MCP client config (e.g. `~/.claude.json` for Claude Code):
 }
 ```
 
+For [opencode](https://opencode.ai) the server lives under the `mcp` key in `opencode.json` (note `environment`, not `env`):
+
+```json
+{
+  "mcp": {
+    "thunderbird-mail": {
+      "type": "local",
+      "command": ["node", "/workspace/thunderbird-mcp/mcp-bridge.cjs"],
+      "environment": {
+        "THUNDERBIRD_MCP_CONNECTION_FILE": "/workspace/thunderbird-mcp/connection.json"
+      },
+      "enabled": true
+    }
+  }
+}
+```
+
+The `THUNDERBIRD_MCP_CONNECTION_FILE` override is only needed when the bridge can't auto-discover the file (e.g. it runs in a container while Thunderbird runs on the host). Omit it for a normal local install.
+
 ### Sandbox-aware connection discovery
 
 The bridge re-discovers `connection.json` on every cache miss. It tries these locations in order:
